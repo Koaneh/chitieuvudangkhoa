@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<meta content="#6366f1" name="theme-color"/>
+<title>CashFlow Cá Nhân</title>
+<link href="style.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+</head>
+<body>
+<header class="header">
+<div class="header-inner">
+<a aria-label="Về tổng quan" class="logo" href="#overview">
+<span class="logo-icon">💸</span>
+<span>
+<span class="logo-text">Chi Tiêu</span>
+<span class="logo-sub">Dòng tiền cá nhân · LocalStorage</span>
+</span>
+</a>
+<div class="header-actions">
+<button class="btn-icon" id="btnExportCSV" title="Xuất CSV"><span>📥</span><span class="btn-text">CSV</span></button>
+<button class="btn-icon" id="btnOpenSettings" title="Cài đặt"><span>⚙️</span><span class="btn-text">Cài đặt</span></button>
+</div>
+</div>
+</header>
+<main class="main">
+<section class="hero section" id="overview">
+<div class="hero-top">
+<div>
+<p class="eyebrow">Tổng quan dòng tiền</p>
+<h1 id="statusTitle">Đang tải dữ liệu...</h1>
+<p id="statusSubtitle">Theo dõi tiền vào, tiền ra, khoản nợ và số dư cá nhân trong một màn hình.</p>
+</div>
+<div class="status-pill" id="statusPill">—</div>
+</div>
+<div class="cash-summary">
+<article class="cash-card income-card">
+<span>Tiền vào tháng này</span>
+<strong id="kpiMonthIncome">0 ₫</strong>
+</article>
+<article class="cash-card expense-card">
+<span>Tiền ra tháng này</span>
+<strong id="kpiMonthExpense">0 ₫</strong>
+</article>
+<article class="cash-card balance-card">
+<span>Số dư ước tính</span>
+<strong id="kpiCashBalance">0 ₫</strong>
+</article>
+</div>
+<div class="kpi-grid kpi-grid-main">
+<article class="kpi-card kpi-today">
+<div class="kpi-icon">📅</div>
+<div class="kpi-body">
+<div class="kpi-label">Hôm nay đã tiêu</div>
+<div class="kpi-value" id="kpiToday">0 ₫</div>
+</div>
+</article>
+<article class="kpi-card kpi-daily">
+<div class="kpi-icon">🧭</div>
+<div class="kpi-body">
+<div class="kpi-label">Hôm nay nên tiêu tối đa</div>
+<div class="kpi-value" id="kpiDailyLimit">—</div>
+</div>
+</article>
+<article class="kpi-card kpi-month">
+<div class="kpi-icon">📆</div>
+<div class="kpi-body">
+<div class="kpi-label">Đã dùng ngân sách</div>
+<div class="kpi-value" id="kpiMonth">0 ₫</div>
+</div>
+</article>
+<article class="kpi-card kpi-remain">
+<div class="kpi-icon">💚</div>
+<div class="kpi-body">
+<div class="kpi-label">Còn lại theo ngân sách</div>
+<div class="kpi-value" id="kpiRemain">—</div>
+</div>
+</article>
+</div>
+<div class="budget-progress-wrap" id="budgetProgressWrap">
+<div class="budget-progress-header">
+<span>Đã dùng <strong id="budgetPercent">—</strong> ngân sách</span>
+<span id="budgetProgressLabel">Chưa đặt ngân sách</span>
+</div>
+<div class="budget-progress-bar"><div class="budget-progress-fill" id="budgetProgressFill"></div></div>
+</div>
+<div class="mini-grid">
+<div class="mini-card">
+<span class="mini-label">Chi cố định</span>
+<strong id="kpiFixed">0 ₫</strong>
+</div>
+<div class="mini-card">
+<span class="mini-label">Chi linh hoạt</span>
+<strong id="kpiFlexible">0 ₫</strong>
+</div>
+<div class="mini-card">
+<span class="mini-label">Mục tiêu tiết kiệm</span>
+<strong id="kpiSavingTarget">—</strong>
+</div>
+<div class="mini-card">
+<span class="mini-label">Còn có thể tiêu</span>
+<strong id="kpiSpendable">—</strong>
+</div>
+<div class="mini-card debt-mini-card">
+<span class="mini-label">Người khác nợ mình</span>
+<strong id="kpiDebtReceivable">0 ₫</strong>
+</div>
+<div class="mini-card debt-mini-card">
+<span class="mini-label">Mình đang nợ</span>
+<strong id="kpiDebtPayable">0 ₫</strong>
+</div>
+</div>
+<div class="saving-advice-card" id="savingAdviceCard">
+  <div class="saving-advice-head">
+    <div>
+      <span class="saving-kicker">💎 Đề xuất tiết kiệm</span>
+      <h3>Nên cất riêng bao nhiêu?</h3>
+      <p id="savingAdviceText">App sẽ tự tính theo tiền đang có, tiền vào, tiền ra và số ngày còn lại trong tháng.</p>
+    </div>
+    <div class="saving-score" id="savingScore">—</div>
+  </div>
+  <div class="saving-advice-grid">
+    <article class="saving-option safe">
+      <span>An toàn</span>
+      <strong id="savingSafe">0 ₫</strong>
+      <small>Dễ thực hiện, ít ảnh hưởng sinh hoạt</small>
+    </article>
+    <article class="saving-option recommend">
+      <span>Nên tiết kiệm</span>
+      <strong id="savingRecommended">0 ₫</strong>
+      <small>Mức cân bằng được đề xuất</small>
+    </article>
+    <article class="saving-option max">
+      <span>Tối đa</span>
+      <strong id="savingMax">0 ₫</strong>
+      <small>Chỉ nên dùng nếu ít phát sinh thêm</small>
+    </article>
+  </div>
+  <div class="saving-progress-row">
+    <div class="saving-progress-label">
+      <span id="savingRateLabel">Tỷ lệ tiết kiệm gợi ý</span>
+      <strong id="savingRateValue">—</strong>
+    </div>
+    <div class="saving-progress-bar"><div id="savingProgressFill"></div></div>
+  </div>
+  <div class="saving-hint" id="savingHint">Gợi ý sẽ rõ hơn khi bạn ghi đủ tiền vào và khoản chi trong tháng.</div>
+</div>
+
+<div id="alertArea"></div>
+<div class="suggestion-box" id="suggestionBox"></div>
+</section>
+<section class="section quick-section" id="quick">
+<div class="section-head">
+<h2 class="section-title">⚡ Ghi nhanh</h2>
+<div class="section-actions">
+<button class="btn-light" id="btnFocusAmount">Nhập chi</button>
+<button class="btn-light green" id="btnFocusIncome">Nhập tiền vào</button>
+</div>
+</div>
+<div class="quick-presets" id="presetContainer"></div>
+<div class="repeat-last" hidden="" id="repeatLastArea">
+<button class="btn-repeat" id="btnRepeatLast">🔁 Thêm lại: <span id="repeatLastLabel"></span></button>
+</div>
+<div class="form-grid-two">
+<form class="input-card" id="expenseForm">
+<div class="form-title-row">
+<h3>Ghi khoản chi</h3>
+<span class="form-tag expense">Tiền ra</span>
+</div>
+<div class="input-row">
+<div class="input-group input-amount">
+<label>Số tiền <span class="hint">ví dụ: 35000 hoặc 25.000</span></label>
+<input autocomplete="off" enterkeyhint="done" id="inputAmount" inputmode="numeric" placeholder="Ví dụ: 35000" type="text"/>
+
+</div>
+<div class="input-group">
+<label>Danh mục</label>
+<select id="inputCategory"></select>
+</div>
+<div class="input-group">
+<label>Ngày</label>
+<input id="inputDate" type="date"/>
+</div>
+</div>
+<div class="input-row">
+<div class="input-group input-note">
+<label>Ghi chú <span class="hint">không bắt buộc</span></label>
+<input autocomplete="off" enterkeyhint="done" id="inputNote" placeholder="Ăn tối, gửi xe, mua đồ..." type="text"/>
+</div>
+<div class="input-group small-group">
+<label>Loại chi</label>
+<select id="inputType">
+<option value="flexible">Linh hoạt</option>
+<option value="fixed">Cố định</option>
+</select>
+</div>
+<div class="input-group small-group">
+<label>Cảm giác</label>
+<select id="inputMood">
+<option value="necessary">Cần thiết</option>
+<option selected="" value="normal">Bình thường</option>
+<option value="waste">Hơi phí</option>
+<option value="regret">Hối hận</option>
+</select>
+</div>
+<button class="btn-save" type="submit">Lưu chi tiêu</button>
+</div>
+</form>
+<form class="input-card income-input-card" id="incomeForm">
+<div class="form-title-row">
+<h3>Ghi tiền vào</h3>
+<span class="form-tag income">Tiền vào</span>
+</div>
+<div class="input-row">
+<div class="input-group input-amount">
+<label>Số tiền nhận được</label>
+<input autocomplete="off" id="incomeAmount" inputmode="numeric" placeholder="Ví dụ: 500000" type="text"/>
+
+</div>
+<div class="input-group">
+<label>Nguồn tiền</label>
+<select id="incomeSource"></select>
+</div>
+<div class="input-group">
+<label>Ngày nhận</label>
+<input id="incomeDate" type="date"/>
+</div>
+</div>
+<div class="input-row">
+<div class="input-group input-note">
+<label>Ghi chú</label>
+<input autocomplete="off" id="incomeNote" placeholder="Lương part-time, phụ cấp, được chuyển khoản..." type="text"/>
+</div>
+<button class="btn-save btn-income" type="submit">Lưu tiền vào</button>
+</div>
+</form>
+</div>
+</section>
+<section class="section tx-section" id="transactions">
+<div class="section-head">
+<h2 class="section-title">📋 Giao dịch</h2>
+<span class="tx-count" id="txCount">0 giao dịch</span>
+</div>
+<div class="quick-filter" id="quickFilter">
+<button class="range-btn active" data-range="month">Tháng này</button>
+<button class="range-btn" data-range="today">Hôm nay</button>
+<button class="range-btn" data-range="week">7 ngày</button>
+<button class="range-btn" data-range="all">Tất cả</button>
+</div>
+<div class="filters">
+<div class="filter-group">
+<label>Tháng</label>
+<input id="filterMonth" type="month"/>
+</div>
+<div class="filter-group">
+<label>Dòng tiền</label>
+<select id="filterFlow">
+<option value="">Tất cả</option>
+<option value="expense">Tiền ra</option>
+<option value="income">Tiền vào</option>
+</select>
+</div>
+<div class="filter-group">
+<label>Danh mục / nguồn</label>
+<select id="filterCat"><option value="">Tất cả</option></select>
+</div>
+<div class="filter-group">
+<label>Loại chi</label>
+<select id="filterType">
+<option value="">Tất cả</option>
+<option value="fixed">Cố định</option>
+<option value="flexible">Linh hoạt</option>
+</select>
+</div>
+</div>
+<div class="tx-list" id="txList">
+<div class="tx-empty">Chưa có giao dịch nào. Hãy thêm khoản chi hoặc tiền vào đầu tiên!</div>
+</div>
+</section>
+<section class="section debt-section" id="debts">
+<div class="debt-hero">
+<div class="debt-hero-copy">
+<div class="debt-kicker">🤝 Quản lý nợ cá nhân</div>
+<h2>Sổ nợ</h2>
+<p>Theo dõi khoản cần thu, khoản cần trả và thời điểm nên nhắc để không quên tiền.</p>
+</div>
+<div class="debt-open-badge">
+<span id="debtCount">0 khoản mở</span>
+<small>đang theo dõi</small>
+</div>
+</div>
+<div class="debt-summary-grid">
+<article class="debt-summary-card lent">
+<div class="debt-card-icon">↙</div>
+<span>Người khác nợ mình</span>
+<strong id="debtReceivableTotal">0 ₫</strong>
+<small>Tiền cần thu về</small>
+</article>
+<article class="debt-summary-card borrowed">
+<div class="debt-card-icon">↗</div>
+<span>Mình đang nợ</span>
+<strong id="debtPayableTotal">0 ₫</strong>
+<small>Tiền cần chuẩn bị trả</small>
+</article>
+<article class="debt-summary-card due">
+<div class="debt-card-icon">⏳</div>
+<span>Sắp đến hạn</span>
+<strong id="debtDueSoonTotal">0 ₫</strong>
+<small>Trong 3 ngày tới</small>
+</article>
+<article class="debt-summary-card overdue">
+<div class="debt-card-icon">!</div>
+<span>Quá hạn</span>
+<strong id="debtOverdueTotal">0 ₫</strong>
+<small>Cần xử lý ngay</small>
+</article>
+</div>
+<div class="debt-layout">
+<form class="input-card debt-form" id="debtForm">
+<div class="form-title-row debt-form-head">
+<div>
+<h3>Thêm khoản nợ</h3>
+<p>Ghi nhanh khoản cho nợ hoặc khoản bạn đang vay.</p>
+</div>
+<span class="form-tag debt">Nợ / Vay</span>
+</div>
+<div class="debt-form-grid">
+<div class="input-group debt-direction-group">
+<label>Loại khoản</label>
+<select id="debtDirection">
+<option value="lent">Người khác nợ mình</option>
+<option value="borrowed">Mình nợ người khác</option>
+</select>
+</div>
+<div class="input-group">
+<label>Ai?</label>
+<input autocomplete="off" id="debtPerson" placeholder="Tên người / nhóm" type="text"/>
+</div>
+<div class="input-group input-amount">
+<label>Số tiền</label>
+<input autocomplete="off" id="debtAmount" inputmode="numeric" placeholder="Ví dụ: 100000" type="text"/>
+</div>
+<div class="input-group">
+<label>Ngày phát sinh</label>
+<input id="debtDate" type="date"/>
+</div>
+<div class="input-group">
+<label>Hẹn trả / hẹn đòi</label>
+<input id="debtDueDate" type="date"/>
+</div>
+<div class="input-group input-note">
+<label>Ghi chú</label>
+<input autocomplete="off" id="debtNote" placeholder="Ví dụ: tiền ăn, ứng trước, mượn tạm..." type="text"/>
+</div>
+</div>
+<div class="debt-options-row">
+<label class="check-row debt-check-row">
+<input checked="" id="debtAffectCash" type="checkbox"/>
+<span>Tự ghi vào dòng tiền hiện tại</span>
+</label>
+<button class="btn-save btn-debt" type="submit">Lưu khoản nợ</button>
+</div>
+</form>
+<div class="debt-side-panel">
+<div class="debt-side-title">Gợi ý xử lý</div>
+<div class="debt-advice" id="debtAdvice"></div>
+</div>
+</div>
+<div class="debt-list-wrap">
+<div class="debt-list-head">
+<h3>Danh sách khoản đang mở</h3>
+<span>Nên xử lý các khoản quá hạn trước</span>
+</div>
+<div class="debt-list" id="debtList"></div>
+</div>
+</section>
+<section class="section insights-section" id="insights">
+<div class="insights-hero">
+<div>
+<span class="insights-kicker">CashFlow AI</span>
+<h2 class="section-title">🧠 Nhận xét dòng tiền</h2>
+<p>Những điểm cần chú ý nhất trong tháng này.</p>
+</div>
+<span class="insights-badge">Tự động phân tích</span>
+</div>
+<div class="insights-list" id="insightsList"></div>
+</section>
+<section class="section extra-section" id="extraStats">
+<h2 class="section-title">🏆 Điểm đáng chú ý</h2>
+<div class="extra-grid">
+<div class="panel">
+<h3>Top khoản chi lớn nhất</h3>
+<div class="rank-list" id="topExpenses"></div>
+</div>
+<div class="panel">
+<h3>Top tiền vào</h3>
+<div class="rank-list" id="topIncomes"></div>
+</div>
+<div class="panel">
+<h3>Ngày tiêu nhiều nhất</h3>
+<div class="big-stat" id="biggestDay">—</div>
+</div>
+<div class="panel">
+<h3>Cảm giác chi tiêu</h3>
+<div class="mood-list" id="moodStats"></div>
+</div>
+</div>
+</section>
+<section class="section charts-section" id="charts">
+<h2 class="section-title">📈 Biểu đồ</h2>
+<div class="charts-grid">
+<div class="chart-card">
+<div class="chart-title">Cơ cấu chi tiêu</div>
+<div class="chart-wrap"><canvas id="chartPie"></canvas></div>
+</div>
+<div class="chart-card">
+<div class="chart-title">Tiền vào / tiền ra theo ngày</div>
+<div class="chart-wrap"><canvas id="chartBar"></canvas></div>
+</div>
+<div class="chart-card chart-compare">
+<div class="chart-title">So sánh chi tiêu 2 tháng gần nhất</div>
+<div class="chart-wrap"><canvas id="chartCompare"></canvas></div>
+</div>
+</div>
+</section>
+<section class="section settings-section" id="settings">
+<h2 class="section-title">⚙️ Cài đặt cá nhân</h2>
+<div class="settings-grid">
+<div class="settings-card money-plan-card">
+<div class="plan-card-head">
+  <span class="plan-icon">💰</span>
+  <div>
+    <h3>Kế hoạch tiền</h3>
+    <p class="small-muted">Thiết lập hạn mức, số tiền có sẵn và mục tiêu tiết kiệm.</p>
+  </div>
+</div>
+<div class="budget-input-wrap">
+<label>Ngân sách chi tiêu tháng</label>
+<div class="budget-input-inner">
+<input id="inputBudget" inputmode="numeric" placeholder="Ví dụ: 3000000" type="text"/>
+
+<button id="btnSetBudget">Lưu</button>
+</div>
+</div>
+<div class="budget-input-wrap">
+<label>Số dư đầu tháng / tiền có sẵn</label>
+<div class="budget-input-inner">
+<input id="inputOpeningBalance" inputmode="numeric" placeholder="Ví dụ: 500000" type="text"/>
+
+<button id="btnSetOpeningBalance">Lưu</button>
+</div>
+<p class="small-muted">Dùng khi đầu tháng bạn đã có sẵn tiền. Các khoản nhận thêm trong tháng hãy ghi ở mục “Tiền vào”.</p>
+</div>
+<div class="budget-input-wrap">
+<label>Mục tiêu tiết kiệm tháng</label>
+<div class="budget-input-inner">
+<input id="inputSavingTarget" inputmode="numeric" placeholder="Ví dụ: 1000000" type="text"/>
+
+<button id="btnSetSavingTarget">Lưu</button>
+</div>
+</div>
+</div>
+<div class="settings-card">
+<h3>Chỉnh sửa nút nhập nhanh</h3>
+<p class="small-muted">Bạn có thể thêm nút mới hoặc chỉnh sửa/xóa cả các nút nhập nhanh có sẵn.</p>
+<div class="custom-preset-form">
+<input id="customPresetLabel" placeholder="Tên nút, ví dụ Cơm"/>
+<input id="customPresetAmount" inputmode="numeric" placeholder="Số tiền, ví dụ 30000"/>
+
+<select id="customPresetCat"></select>
+<input id="customPresetNote" placeholder="Ghi chú"/>
+<button id="btnAddCustomPreset">Thêm nút mới</button>
+</div>
+<div class="custom-preset-list" id="customPresetList"></div>
+</div>
+<div class="settings-card">
+<h3>Dữ liệu</h3>
+<p>Dữ liệu chỉ lưu trên trình duyệt hiện tại bằng LocalStorage. Khi đổi máy/trình duyệt, dữ liệu sẽ không tự đồng bộ.</p>
+<div class="settings-actions">
+<button class="btn-light" id="btnBackupJSON">Tải backup JSON</button>
+<label class="btn-light file-label">Nhập backup <input accept="application/json" hidden="" id="inputImportJSON" type="file"/></label>
+<button class="btn-danger-solid" id="btnClearAll">Xóa toàn bộ</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<button aria-label="Ghi nhanh" class="fab" id="fabAdd">+ Ghi nhanh</button>
+<nav aria-label="Điều hướng nhanh" class="mobile-tabbar">
+<a href="#overview">🏠<span>Home</span></a>
+<a href="#quick">⚡<span>Ghi</span></a>
+<a href="#transactions">📋<span>Giao dịch</span></a>
+<a href="#charts">📈<span>Thống kê</span></a>
+<a href="#settings">⚙️<span>Cài đặt</span></a>
+</nav>
+<div class="sheet-backdrop" hidden="" id="sheetBackdrop"></div>
+<section aria-label="Ghi nhanh" class="bottom-sheet" hidden="" id="quickSheet">
+<div class="sheet-handle"></div>
+<div class="sheet-head">
+<h2>Ghi nhanh</h2>
+<button class="sheet-close" data-close-sheet="">✕</button>
+</div>
+<form class="sheet-form" id="sheetForm">
+<div aria-label="Chọn loại giao dịch" class="segmented" role="tablist">
+<button class="seg-btn active" data-sheet-kind="expense" type="button">Tiền ra</button>
+<button class="seg-btn" data-sheet-kind="income" type="button">Tiền vào</button>
+</div>
+<input autocomplete="off" id="sheetAmount" inputmode="numeric" placeholder="Số tiền" type="text"/>
+
+<select id="sheetCategory"></select>
+<input id="sheetDate" type="date"/>
+<input autocomplete="off" id="sheetNote" placeholder="Ghi chú nhanh" type="text"/>
+<div class="sheet-two sheet-expense-extra">
+<select id="sheetType">
+<option value="flexible">Linh hoạt</option>
+<option value="fixed">Cố định</option>
+</select>
+<select id="sheetMood">
+<option value="necessary">Cần thiết</option>
+<option selected="" value="normal">Bình thường</option>
+<option value="waste">Hơi phí</option>
+<option value="regret">Hối hận</option>
+</select>
+</div>
+<button class="btn-save sheet-save" type="submit">Lưu ngay</button>
+</form>
+</section>
+<section aria-label="Sửa giao dịch" class="bottom-sheet" hidden="" id="editSheet">
+<div class="sheet-handle"></div>
+<div class="sheet-head">
+<h2>Sửa giao dịch</h2>
+<button class="sheet-close" data-close-sheet="">✕</button>
+</div>
+<form class="sheet-form" id="editForm">
+<input id="editId" type="hidden"/>
+<div aria-label="Loại giao dịch" class="segmented" role="tablist">
+<button class="seg-btn active" data-edit-kind="expense" type="button">Tiền ra</button>
+<button class="seg-btn" data-edit-kind="income" type="button">Tiền vào</button>
+</div>
+<input id="editAmount" inputmode="numeric" placeholder="Số tiền" type="text"/>
+
+<select id="editCategory"></select>
+<input id="editDate" type="date"/>
+<input id="editNote" placeholder="Ghi chú" type="text"/>
+<div class="sheet-two edit-expense-extra">
+<select id="editType">
+<option value="flexible">Linh hoạt</option>
+<option value="fixed">Cố định</option>
+</select>
+<select id="editMood">
+<option value="necessary">Cần thiết</option>
+<option value="normal">Bình thường</option>
+<option value="waste">Hơi phí</option>
+<option value="regret">Hối hận</option>
+</select>
+</div>
+<button class="btn-save sheet-save" type="submit">Lưu thay đổi</button>
+</form>
+</section>
+<div class="toast" id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>
