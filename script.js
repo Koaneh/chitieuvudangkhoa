@@ -209,6 +209,8 @@ function normalizeDebt(debt) {
     createdAt: debt.createdAt || new Date().toISOString(),
     closedAt: debt.closedAt || '',
     affectCash: debt.affectCash !== false,
+    personalExpense: debt.personalExpense === true,
+    expenseCategory: debt.expenseCategory || 'Ăn uống',
   };
 }
 function getDebts() {
@@ -411,26 +413,57 @@ function updateTransaction(id, updates) {
   showToast('Đã cập nhật giao dịch');
 }
 
-function addDebt({ direction = 'lent', person, amount, date = todayStr(), dueDate = '', note = '', affectCash = true }) {
-  if (!person.trim()) { showToast('Nhập tên người liên quan'); return false; }
+function addDebt({ direction = 'lent', person, amount, date = todayStr(), dueDate = '', note = '', affectCash = true, personalExpense = false, expenseCategory = 'Ăn uống' }) {
+  const cleanPerson = String(person || '').trim();
+  if (!cleanPerson) { showToast('Nhập tên người liên quan'); return false; }
   if (!amount || isNaN(amount) || amount <= 0) { showToast('Số tiền nợ không hợp lệ'); return false; }
+
+  // Chỉ áp dụng “chi tiêu cá nhân” cho trường hợp mình nợ người khác.
+  // Ví dụ: A mua cơm giúp mình → mình nợ A, nhưng vẫn tính 25k vào Ăn uống ngay hôm nay.
+  const isPersonalExpenseDebt = direction === 'borrowed' && personalExpense === true;
+
   const debt = {
-    id: genId(), direction, person: person.trim(), amount: Math.round(amount), date, dueDate, note,
-    status: 'open', createdAt: new Date().toISOString(), affectCash: !!affectCash,
+    id: genId(),
+    direction,
+    person: cleanPerson,
+    amount: Math.round(amount),
+    date,
+    dueDate,
+    note,
+    status: 'open',
+    createdAt: new Date().toISOString(),
+    affectCash: isPersonalExpenseDebt ? false : !!affectCash,
+    personalExpense: isPersonalExpenseDebt,
+    expenseCategory: isPersonalExpenseDebt ? expenseCategory : '',
   };
+
   const debts = getDebts();
   debts.unshift(debt);
   saveDebts(debts);
-  if (affectCash) {
+
+  if (isPersonalExpenseDebt) {
+    addTransaction({
+      kind: 'expense',
+      amount,
+      category: expenseCategory || 'Khác',
+      note: `${note ? note + ' - ' : ''}${cleanPerson} trả hộ, mình đang nợ`,
+      date,
+      type: 'flexible',
+      mood: 'necessary'
+    });
+  } else if (affectCash) {
     if (direction === 'lent') {
-      addTransaction({ kind: 'expense', amount, category: 'Cho vay / Nợ', note: `Cho ${person.trim()} nợ${note ? ' - ' + note : ''}`, date, type: 'flexible', mood: 'necessary' });
+      addTransaction({ kind: 'expense', amount, category: 'Cho vay / Nợ', note: `Cho ${cleanPerson} nợ${note ? ' - ' + note : ''}`, date, type: 'flexible', mood: 'necessary' });
     } else {
-      addTransaction({ kind: 'income', amount, category: 'Vay / Nợ', note: `Vay từ ${person.trim()}${note ? ' - ' + note : ''}`, date });
+      addTransaction({ kind: 'income', amount, category: 'Vay / Nợ', note: `Vay từ ${cleanPerson}${note ? ' - ' + note : ''}`, date });
     }
   } else {
     renderAll();
   }
-  showToast(direction === 'lent' ? 'Đã thêm khoản người khác nợ mình' : 'Đã thêm khoản mình đang nợ');
+
+  showToast(isPersonalExpenseDebt
+    ? 'Đã ghi chi tiêu cá nhân và lưu khoản nợ'
+    : (direction === 'lent' ? 'Đã thêm khoản người khác nợ mình' : 'Đã thêm khoản mình đang nợ'));
   return true;
 }
 function closeDebt(id) {
@@ -440,7 +473,10 @@ function closeDebt(id) {
   if (!confirm(action)) return;
   const debts = getDebts().map(d => d.id === id ? { ...d, status: 'done', closedAt: new Date().toISOString() } : d);
   saveDebts(debts);
-  if (debt.affectCash) {
+  if (debt.personalExpense) {
+    // Khoản này đã được tính vào chi tiêu ngay khi phát sinh, nên không ghi thêm giao dịch khi trả nợ.
+    renderAll();
+  } else if (debt.affectCash) {
     if (debt.direction === 'lent') {
       addTransaction({ kind: 'income', amount: debt.amount, category: 'Thu nợ', note: `Thu nợ từ ${debt.person}${debt.note ? ' - ' + debt.note : ''}`, date: todayStr() });
     } else {
@@ -914,12 +950,13 @@ function renderDebts() {
     else if (days === 0) { dueText += ' · Hôm nay'; dueClass = 'today'; }
     else if (days !== null && days <= 3) { dueText += ` · Còn ${days} ngày`; dueClass = 'soon'; }
     const isLent = d.direction === 'lent';
+    const expenseBadge = d.personalExpense ? ` · Đã tính chi tiêu: ${escapeHTML(d.expenseCategory || 'Khác')}` : '';
     return `
-      <article class="debt-item ${isLent ? 'lent' : 'borrowed'} ${dueClass}">
+      <article class="debt-item ${isLent ? 'lent' : 'borrowed'} ${dueClass} ${d.personalExpense ? 'personal-expense' : ''}">
         <div class="debt-badge">${isLent ? '🤝' : '🧾'}</div>
         <div class="debt-body">
           <div class="debt-top"><strong>${escapeHTML(d.person)}</strong><span>${isLent ? 'Nợ mình' : 'Mình nợ'}</span></div>
-          <div class="debt-meta">${dueText} · Phát sinh ${formatDate(d.date)}${d.note ? ' · ' + escapeHTML(d.note) : ''}</div>
+          <div class="debt-meta">${dueText} · Phát sinh ${formatDate(d.date)}${expenseBadge}${d.note ? ' · ' + escapeHTML(d.note) : ''}</div>
         </div>
         <div class="debt-amount">${fmtMoney(d.amount)}</div>
         <div class="debt-actions">
@@ -1284,6 +1321,25 @@ function debounce(fn, wait) {
   };
 }
 
+
+function updateDebtExpenseOption() {
+  const box = $('debtExpenseBox');
+  const fields = $('debtExpenseFields');
+  const toggle = $('debtIsPersonalExpense');
+  const affectCash = $('debtAffectCash');
+  if (!box || !fields || !toggle || !affectCash) return;
+  const isBorrowed = $('debtDirection').value === 'borrowed';
+  box.style.display = isBorrowed ? 'block' : 'none';
+  if (!isBorrowed) toggle.checked = false;
+  fields.style.display = isBorrowed && toggle.checked ? 'grid' : 'none';
+  if (isBorrowed && toggle.checked) {
+    affectCash.checked = false;
+    affectCash.disabled = true;
+  } else {
+    affectCash.disabled = false;
+  }
+}
+
 function initEventListeners() {
   bindMoneyAutoFormat();
   $('expenseForm').addEventListener('submit', e => {
@@ -1333,6 +1389,8 @@ function initEventListeners() {
       dueDate: $('debtDueDate').value,
       note: $('debtNote').value.trim(),
       affectCash: $('debtAffectCash').checked,
+      personalExpense: $('debtIsPersonalExpense').checked,
+      expenseCategory: $('debtExpenseCategory').value || 'Ăn uống',
     });
     if (ok) {
       $('debtPerson').value = '';
@@ -1341,8 +1399,13 @@ function initEventListeners() {
       $('debtDate').value = todayStr();
       $('debtDueDate').value = defaultDebtDueDate();
       $('debtAffectCash').checked = true;
+      $('debtIsPersonalExpense').checked = false;
+      updateDebtExpenseOption();
     }
   });
+
+  $('debtDirection').addEventListener('change', updateDebtExpenseOption);
+  $('debtIsPersonalExpense').addEventListener('change', updateDebtExpenseOption);
 
   $('btnFocusAmount').addEventListener('click', () => $('inputAmount').focus());
   $('btnFocusIncome').addEventListener('click', () => $('incomeAmount').focus());
@@ -1444,7 +1507,7 @@ function initEventListeners() {
 }
 
 function init() {
-  ['inputCategory', 'customPresetCat'].forEach(id => populateCategorySelect($(id)));
+  ['inputCategory', 'customPresetCat', 'debtExpenseCategory'].forEach(id => populateCategorySelect($(id)));
   populateIncomeSelect($('incomeSource'));
   populateMixedFilter();
   setSheetKind('expense');
@@ -1456,6 +1519,7 @@ function init() {
   $('sheetDate').value = todayStr();
   $('filterMonth').value = thisMonthStr();
   hydrateSettingsInputs(true);
+  updateDebtExpenseOption();
   initEventListeners();
   renderAll();
 }

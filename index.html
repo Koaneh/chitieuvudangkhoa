@@ -5,7 +5,7 @@
 <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
 <meta content="#6366f1" name="theme-color"/>
 <title>CashFlow Cá Nhân</title>
-<link href="style.css" rel="stylesheet"/>
+<link href="style.css?v=debt-expense-1" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -357,6 +357,19 @@
 <input autocomplete="off" id="debtNote" placeholder="Ví dụ: tiền ăn, ứng trước, mượn tạm..." type="text"/>
 </div>
 </div>
+<div class="debt-expense-box" id="debtExpenseBox">
+  <label class="check-row debt-check-row debt-expense-toggle">
+    <input id="debtIsPersonalExpense" type="checkbox"/>
+    <span>Khoản này là chi tiêu cá nhân</span>
+  </label>
+  <div class="debt-expense-fields" id="debtExpenseFields">
+    <div class="input-group">
+      <label>Danh mục chi tiêu</label>
+      <select id="debtExpenseCategory"></select>
+    </div>
+    <p>Ví dụ: A mua cơm giúp bạn 25k → app tính vào <strong>Ăn uống hôm nay</strong>, đồng thời vẫn lưu khoản <strong>bạn nợ A</strong>. Khi bấm “Đã trả”, app không ghi thêm chi tiêu lần nữa để tránh tính trùng.</p>
+  </div>
+</div>
 <div class="debt-options-row">
 <label class="check-row debt-check-row">
 <input checked="" id="debtAffectCash" type="checkbox"/>
@@ -562,6 +575,6 @@
 </form>
 </section>
 <div class="toast" id="toast"></div>
-<script src="script.js"></script>
+<script src="script.js?v=debt-expense-1"></script>
 </body>
 </html>

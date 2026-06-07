@@ -2634,13 +2634,83 @@ body::before {
   }
 }
 
-
 /* =========================================================
-   USER REQUEST - Purple text for "Nhập tiền vào" quick button
+   DEBT PERSONAL EXPENSE OPTION
+   Tính khoản mình nợ người khác thành chi tiêu cá nhân ngay khi phát sinh
    ========================================================= */
-#btnFocusIncome,
-#btnFocusIncome:hover,
-#btnFocusIncome:focus,
-#btnFocusIncome:active {
-  color: #a855f7 !important;
+.debt-expense-box {
+  margin-top: 4px;
+  padding: 14px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(249,115,22,.13), transparent 11rem),
+    linear-gradient(135deg, rgba(255,247,237,.94), rgba(255,255,255,.76));
+  border: 1px solid rgba(253,186,116,.55);
+  box-shadow: 0 14px 30px rgba(249,115,22,.08);
+}
+
+.debt-expense-toggle {
+  width: 100%;
+  justify-content: flex-start;
+  border-radius: 18px;
+  background: rgba(255,255,255,.74);
+  border-color: rgba(253,186,116,.58);
+  color: #9a3412;
+}
+
+.debt-expense-toggle input {
+  accent-color: #f97316;
+}
+
+.debt-expense-fields {
+  display: grid;
+  grid-template-columns: minmax(210px, .72fr) minmax(260px, 1fr);
+  gap: 12px;
+  align-items: end;
+  margin-top: 12px;
+}
+
+.debt-expense-fields .input-group {
+  min-width: 0;
+}
+
+.debt-expense-fields select {
+  min-height: 50px;
+  border-radius: 16px;
+  border: 1.5px solid rgba(251,146,60,.42);
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.debt-expense-fields p {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.68);
+  border: 1px dashed rgba(251,146,60,.44);
+  color: #7c2d12;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.debt-item.personal-expense .debt-badge {
+  background: linear-gradient(135deg, #ffedd5, #fff7ed);
+  color: #ea580c;
+}
+
+.debt-item.personal-expense::before {
+  background: #f97316;
+}
+
+@media (max-width: 760px) {
+  .debt-expense-box {
+    padding: 12px;
+    border-radius: 20px;
+  }
+
+  .debt-expense-fields {
+    grid-template-columns: 1fr;
+  }
 }
